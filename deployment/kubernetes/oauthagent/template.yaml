@@ -1,0 +1,91 @@
+#
+# The Kubernetes resources for the OAuth Agent, which implements OAuth security for the SPA
+#
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oauthagent
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oauthagent
+  labels:
+    app: oauthagent
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauthagent
+  template:
+    metadata:
+      labels:
+        app: oauthagent
+        sidecar.istio.io/inject: 'true'
+        spire-managed-identity: 'true'
+      annotations:
+        inject.istio.io/templates: 'sidecar,spire'
+    spec:
+      serviceAccountName: oauthagent
+      containers:
+      - name: oauthagent
+        image: $DOCKER_IMAGE
+        env:
+          - name: PORT
+            value: '8000'
+          - name: TRUSTED_WEB_ORIGIN
+            value: $TRUSTED_WEB_ORIGIN
+          - name: ISSUER
+            value: $ISSUER
+          - name: AUTHORIZE_ENDPOINT
+            value: $AUTHORIZE_ENDPOINT
+          - name: TOKEN_ENDPOINT
+            value: http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-token
+          - name: USERINFO_ENDPOINT
+            value: http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-userinfo
+          - name: LOGOUT_ENDPOINT
+            value: $LOGOUT_ENDPOINT
+          - name: CLIENT_ID
+            value: spa_client
+          - name: CLIENT_SECRET
+            value: Password1
+          - name: REDIRECT_URI
+            value: $REDIRECT_URI
+          - name: POST_LOGOUT_REDIRECT_URI
+            value: $POST_LOGOUT_REDIRECT_URI
+          - name: SCOPE
+            value: 'openid profile investments'
+          - name: COOKIE_NAME_PREFIX
+            value: authsamples
+          - name: COOKIE_SECURE
+            value: 'true'
+          - name: COOKIE_ENCRYPTION_KEY
+            value: $COOKIE_ENCRYPTION_KEY
+          - name: SERVER_CERT_P12_PATH
+            value: ''
+          - name: SERVER_CERT_P12_PASSWORD
+            value: ''
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: oauthagent-svc
+spec:
+  selector:
+    app: oauthagent
+  ports:
+  - name: http
+    protocol: "TCP"
+    port: 8000
+---
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: oauthagent-mtls
+spec:
+  selector:
+    matchLabels:
+      name: oauthagent
+  mtls:
+    mode: STRICT

@@ -8,4 +8,4 @@ See the original Curity solution for documentation and concepts:
 ## This Fork
 
 The only difference in this fork is that I added operations for simulating expiry.\
-This enables my example SPA to test that expiry is handled reliably.
+This enables my example SPA to test expiry events.

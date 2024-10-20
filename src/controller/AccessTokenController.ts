@@ -3,13 +3,12 @@ import {decryptCookie, getATCookieName, getCookiesForAccessTokenExpiry} from '..
 import {config} from '../config.js'
 import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
-import {asyncCatch} from '../middleware/exceptionMiddleware.js';
 
 class AccessTokenController {
     public router = express.Router()
 
     constructor() {
-        this.router.post('/expire', asyncCatch(this.ExpireAccessToken))
+        this.router.post('/expire', this.ExpireAccessToken)
     }
 
     // To simulate expiry for test purposes

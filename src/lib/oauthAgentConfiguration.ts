@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-import {CookieSerializeOptions} from 'cookie'
+import {SerializeOptions} from 'cookie'
 
 export default class OAuthAgentConfiguration {
 
@@ -42,7 +42,7 @@ export default class OAuthAgentConfiguration {
     public cookieNamePrefix: string
     public encKey: string
     public trustedWebOrigin: string
-    public cookieOptions: CookieSerializeOptions
+    public cookieOptions: SerializeOptions
 
     constructor(
         port: string,
@@ -62,7 +62,7 @@ export default class OAuthAgentConfiguration {
         cookieNamePrefix: string,
         encKey: string,
         trustedWebOrigin: string,
-        cookieOptions?: CookieSerializeOptions) {
+        cookieOptions?: SerializeOptions) {
 
         this.port = port
         this.endpointsPrefix = endpointsPrefix
@@ -82,7 +82,7 @@ export default class OAuthAgentConfiguration {
             httpOnly: true,
             secure: true,
             sameSite: true
-        } as CookieSerializeOptions
+        } as SerializeOptions
 
         this.issuer = issuer
         this.authorizeEndpoint = authorizeEndpoint

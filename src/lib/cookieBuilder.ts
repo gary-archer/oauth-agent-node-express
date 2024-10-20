@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-import {CookieSerializeOptions, serialize} from 'cookie'
+import {SerializeOptions, serialize} from 'cookie'
 import {getEncryptedCookie} from './cookieEncrypter.js'
 import OAuthAgentConfiguration from './oauthAgentConfiguration.js'
 import {getATCookieName, getRTCookieName, getIDCookieName} from './cookieName.js'
@@ -58,7 +58,7 @@ function getCookiesForTokenResponse(tokenResponse: any, config: OAuthAgentConfig
     return cookies
 }
 
-function getCookiesForUnset(options: CookieSerializeOptions, cookieNamePrefix: string): string[] {
+function getCookiesForUnset(options: SerializeOptions, cookieNamePrefix: string): string[] {
 
     const cookieOptions = {
         ...options,

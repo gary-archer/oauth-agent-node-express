@@ -1,4 +1,4 @@
-FROM kong/kong:latest-ubuntu
+FROM kong/kong:3.8-ubuntu
 
 USER root
 

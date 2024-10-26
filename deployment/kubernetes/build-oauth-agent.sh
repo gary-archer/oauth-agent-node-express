@@ -34,7 +34,7 @@ fi
 #
 # Build its Docker container
 #
-docker build --no-cache -f deployment/kubernetes/oauthagent/Dockerfile -t "$DOCKER_IMAGE" .
+docker build --no-cache -f deployment/kubernetes/Dockerfile -t "$DOCKER_IMAGE" .
 if [ $? -ne 0 ]; then
   echo '*** OAuth Agent docker build problem encountered'
   exit 1

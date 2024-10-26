@@ -37,7 +37,7 @@ export COOKIE_ENCRYPTION_KEY=$(cat ./cookie-encryption.key)
 #
 # Produce the final component YAML with the correct Docker images and environment variables
 #
-envsubst < ./oauthagent/template.yaml > ./oauthagent/oauthagent.yaml
+envsubst < ./template-oauth-agent.yaml > ./oauthagent.yaml
 if [ $? -ne 0 ]; then
   echo '*** Problem encountered running envsubst to produce the final OAuth Agent YAML file'
   exit 1
@@ -46,8 +46,8 @@ fi
 #
 # Deploy the OAuth Agent to the Kubernetes cluster
 #
-kubectl -n applications delete -f ./oauthagent/oauthagent.yaml 2>/dev/null
-kubectl -n applications apply  -f ./oauthagent/oauthagent.yaml
+kubectl -n applications delete -f ./oauthagent.yaml 2>/dev/null
+kubectl -n applications apply  -f ./oauthagent.yaml
 if [ $? -ne 0 ]; then
   echo '*** OAuth Agent Kubernetes deployment problem encountered'
   exit 1

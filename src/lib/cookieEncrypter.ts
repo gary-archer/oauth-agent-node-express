@@ -21,7 +21,6 @@ import {CookieDecryptionException, InvalidCookieException} from '../lib/exceptio
 
 const GCM_IV_SIZE = 12;
 const GCM_TAG_SIZE = 16;
-const CURRENT_VERSION = 1;
 
 function encryptCookie(encKeyHex: string, plaintext: string): string {
     
@@ -48,12 +47,6 @@ function decryptCookie(encKeyHex: string, encryptedbase64value: string): string 
     const minSize = GCM_IV_SIZE + 1 + GCM_TAG_SIZE
     if (allBytes.length < minSize) {
         const error = new Error("The received cookie has an invalid length")
-        throw new InvalidCookieException(error)
-    }
-
-    const version = allBytes[0]
-    if (version != CURRENT_VERSION) {
-        const error = new Error("The received cookie has an invalid format")
         throw new InvalidCookieException(error)
     }
 

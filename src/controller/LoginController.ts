@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Curity AB
+ *  Copyright 2024 Curity AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@ class LoginController {
 
     constructor() {
         this.router.post('/start', this.startLogin)
-        this.router.post('/end', this.handlePageLoad)
+        this.router.post('/end', this.endLogin)
     }
 
     /*
-     * The SPA calls this endpoint to ask the OAuth Agent for the authorization request URL
+     * The SPA calls this endpoint to start a login and ask for the authorization request URL
      */
     startLogin = async (req: express.Request, res: express.Response) => {
 
@@ -53,10 +53,10 @@ class LoginController {
     }
 
     /*
-     * The SPA posts its URL here on every page load, to get its authenticated state
-     * When an OAuth response is received it is handled and cookies are written
+     * The SPA calls this endpoint to end a login and issue cookies
+     * This endpoint can also be used to get the login status if required
      */
-    handlePageLoad = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    endLogin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
         validateExpressRequest(req);
 

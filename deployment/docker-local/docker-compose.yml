@@ -6,7 +6,7 @@ services:
   #
   apigateway:
     image: apigateway:latest
-    hostname: apigateway-internal.authsamples-dev.com
+    hostname: apigateway-internal
     extra_hosts:
      - api.authsamples-dev.com:host-gateway
     ports:
@@ -33,6 +33,6 @@ services:
   #
   oauthagent:
     image: oauthagent:latest
-    hostname: oauthagent-internal.authsamples-dev.com
+    hostname: oauthagent-internal
     env_file:
       - ../environments/docker-local/oauthagent.env

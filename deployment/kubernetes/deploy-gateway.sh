@@ -74,7 +74,7 @@ fi
 #
 # Produce the final component YAML
 #
-envsubst < ./apigateway/template.yaml > ./apigateway/gateway.yaml
+envsubst < ./template-apigateway.yaml > ./apigateway.yaml
 if [ $? -ne 0 ]; then
   echo '*** Problem encountered running envsubst to produce the final gateway YAML file'
   exit 1
@@ -83,8 +83,8 @@ fi
 #
 # Deploy the API gateway to the Kubernetes cluster
 #
-kubectl -n kong delete -f ./apigateway/gateway.yaml 2>/dev/null
-kubectl -n kong apply  -f ./apigateway/gateway.yaml
+kubectl -n kong delete -f ./apigateway.yaml 2>/dev/null
+kubectl -n kong apply  -f ./apigateway.yaml
 if [ $? -ne 0 ]; then
   echo '*** Problem encountered deploying the API gateway'
   exit 1

@@ -24,7 +24,7 @@ fi
 # Build the custom API gateway docker container
 #
 cd ../..
-docker build --no-cache -f deployment/kubernetes/apigateway/Dockerfile -t "$DOCKER_IMAGE" .
+docker build --no-cache -f deployment/apigateway/Dockerfile -t "$DOCKER_IMAGE" .
 if [ $? -ne 0 ]; then
   echo '*** API gateway docker build problem encountered'
   exit 1

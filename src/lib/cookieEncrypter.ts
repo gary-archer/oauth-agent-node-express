@@ -1,5 +1,5 @@
 /*
- *  Copyright 2021 Curity AB
+ *  Copyright 2024 Curity AB
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@ import base64url from 'base64url';
 import {SerializeOptions, serialize} from 'cookie'
 import {CookieDecryptionException, InvalidCookieException} from '../lib/exceptions/index.js'
 
-const VERSION_SIZE = 1;
 const GCM_IV_SIZE = 12;
 const GCM_TAG_SIZE = 16;
-const CURRENT_VERSION = 1;
 
 function encryptCookie(encKeyHex: string, plaintext: string): string {
     
@@ -34,11 +32,10 @@ function encryptCookie(encKeyHex: string, plaintext: string): string {
     const encryptedBytes = cipher.update(plaintext)
     const finalBytes = cipher.final()
     
-    const versionBytes = Buffer.from(new Uint8Array([CURRENT_VERSION]))
     const ciphertextBytes = Buffer.concat([encryptedBytes, finalBytes])
     const tagBytes = cipher.getAuthTag()
     
-    const allBytes = Buffer.concat([versionBytes, ivBytes, ciphertextBytes, tagBytes])
+    const allBytes = Buffer.concat([ivBytes, ciphertextBytes, tagBytes])
 
     return base64url.encode(allBytes)
 }
@@ -47,19 +44,13 @@ function decryptCookie(encKeyHex: string, encryptedbase64value: string): string 
     
     const allBytes = base64url.toBuffer(encryptedbase64value)
 
-    const minSize = VERSION_SIZE + GCM_IV_SIZE + 1 + GCM_TAG_SIZE
+    const minSize = GCM_IV_SIZE + 1 + GCM_TAG_SIZE
     if (allBytes.length < minSize) {
         const error = new Error("The received cookie has an invalid length")
         throw new InvalidCookieException(error)
     }
 
-    const version = allBytes[0]
-    if (version != CURRENT_VERSION) {
-        const error = new Error("The received cookie has an invalid format")
-        throw new InvalidCookieException(error)
-    }
-
-    let offset = VERSION_SIZE
+    let offset = 0
     const ivBytes = allBytes.slice(offset, offset + GCM_IV_SIZE)
 
     offset += GCM_IV_SIZE

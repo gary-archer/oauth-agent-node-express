@@ -40,7 +40,7 @@ fi
 #
 # Build the docker image for the OAuth Agent
 #
-docker build -f deployment/docker-local/Dockerfile-oauth-agent -t oauthagent:latest .
+docker build -f deployment/docker-local/Dockerfile -t oauthagent:latest .
 if [ $? -ne 0 ]; then
   echo 'Problem encountered building the OAuth Agent docker image'
   exit 1
@@ -49,7 +49,7 @@ fi
 #
 # Build the docker image for the Kong API Gateway
 #
-docker build -f deployment/docker-local/Dockerfile-api-gateway -t apigateway:latest .
+docker build -f deployment/apigateway/Dockerfile -t apigateway:latest .
 if [ $? -ne 0 ]; then
   echo 'Problem encountered building the API Gateway docker image'
   exit 1

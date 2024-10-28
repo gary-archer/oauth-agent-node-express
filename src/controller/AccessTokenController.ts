@@ -1,5 +1,5 @@
 import express from 'express'
-import {decryptCookie, getATCookieName, getCookiesForAccessTokenExpiry} from '../lib/index.js'
+import {decryptCookie, getATCookieName, getCookieSerializeOptions, getEncryptedCookie} from '../lib/index.js'
 import {config} from '../config.js'
 import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
@@ -21,8 +21,13 @@ class AccessTokenController {
 
             const accessToken = decryptCookie(config.encKey, req.cookies[atCookieName])
             const expiredAccessToken = `${accessToken}x`
-            const cookiesToSet = getCookiesForAccessTokenExpiry(config, expiredAccessToken)
-            res.setHeader('Set-Cookie', cookiesToSet)
+            
+            const atCookieOptions = getCookieSerializeOptions(config, 'AT')
+            const cookies = [
+                getEncryptedCookie(atCookieOptions, expiredAccessToken, getATCookieName(config.cookieNamePrefix), config.encKey)
+            ]
+            
+            res.setHeader('Set-Cookie', cookies)
             res.status(204).send()
 
         } else {

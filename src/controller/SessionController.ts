@@ -49,6 +49,7 @@ class SessionController {
             responseBody.claims = claims
         }
 
+        res.status(200).json(responseBody)
     }
 }
 

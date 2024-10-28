@@ -79,8 +79,8 @@ HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/login/end" \
 -H 'accept: application/json' \
 -d '{"pageUrl":"'$WEB_BASE_URL'"}' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then \
-  echo "*** Unauthenticated page load did not fail as expected with the custom header"
+if [ "$HTTP_STATUS" != '400' ]; then \
+  echo "*** Unauthenticated page load did not fail as expected due to a missing custom header"
   exit 1
 fi
 
@@ -173,53 +173,52 @@ fi
 echo '7. Authenticated page reload was successful'
 
 #
-# Test getting ID token claims without a cookie
+# Test getting the session without the required custom header
 #
-echo '8. Testing GET claims without secure cookies ...'
+echo '8. Testing GET session without the CORS custom header ...'
 HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/session" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
--H 'token-handler-version: 1' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Invalid claims request did not fail as expected'
+if [ "$HTTP_STATUS" != '400' ]; then
+  echo '*** Session request did not fail as expected'
   exit 1
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
 CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Claims request returned an unexpected error code"
+if [ "$CODE" != 'bad_request' ]; then
+   echo '*** Session request returned an unexpected error code'
    exit 1
 fi
-echo '8. GET claims request without secure cookies was handled correctly'
+echo '8. GET session request without CORS custom header was handled correctly'
 
 #
-# Test getting ID token claims without a cookie
+# Test getting the session without a cookie
 #
-echo '9. Testing GET claims without secure cookies ...'
+echo '9. Testing GET session without secure cookies ...'
 HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/session" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
 -H 'token-handler-version: 1' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Invalid claims request did not fail as expected'
+if [ "$HTTP_STATUS" != '200' ]; then
+  echo "*** Session request failed with status $HTTP_STATUS"
   exit 1
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Claims request returned an unexpected error code"
+IS_LOGGED_IN=$(jq -r .isLoggedIn <<< "$JSON")
+if [ "$IS_LOGGED_IN" != 'false' ]; then
+   echo "*** Session request returned an unexpected authentication status"
    exit 1
 fi
-echo '9. GET claims request without secure cookies was handled correctly'
-2
+echo '9. GET session request without secure cookies was handled correctly'
+
 #
-# Test getting ID token claims successfully
+# Test getting the session with a cookie
 #
 echo '10. Testing GET claims with secure cookies ...'
 HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/session" \

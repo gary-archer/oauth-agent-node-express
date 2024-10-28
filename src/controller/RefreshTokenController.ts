@@ -21,9 +21,9 @@ import {
     getATCookieName,
     getRTCookieName,
     getCookiesForTokenResponse,
-    getCookiesForRefreshTokenExpiry,
     refreshAccessToken,
-    validateIDtoken,
+    getEncryptedCookie,
+    getCookieSerializeOptions,
 } from '../lib/index.js'
 import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
@@ -45,9 +45,6 @@ class RefreshTokenController {
             
             const refreshToken = decryptCookie(config.encKey, req.cookies[rtCookieName])
             const tokenResponse = await refreshAccessToken(refreshToken, config)
-            if (tokenResponse.id_token) {
-                validateIDtoken(config, tokenResponse.id_token)
-            }
 
             const cookiesToSet = getCookiesForTokenResponse(tokenResponse, config)
             res.setHeader('Set-Cookie', cookiesToSet)
@@ -73,9 +70,15 @@ class RefreshTokenController {
             const refreshToken = decryptCookie(config.encKey, req.cookies[rtCookieName])
             const expiredAccessToken = `${accessToken}x`
             const expiredRefreshToken = `${refreshToken}x`
-            const cookiesToSet = getCookiesForRefreshTokenExpiry(config, expiredAccessToken, expiredRefreshToken)
-            res.setHeader('Set-Cookie', cookiesToSet)
 
+            const atCookieOptions = getCookieSerializeOptions(config, 'AT')
+            const rtCookieOptions = getCookieSerializeOptions(config, 'RT')
+            const cookies = [
+                getEncryptedCookie(atCookieOptions, expiredAccessToken, getATCookieName(config.cookieNamePrefix), config.encKey),
+                getEncryptedCookie(rtCookieOptions, expiredRefreshToken, getRTCookieName(config.cookieNamePrefix), config.encKey)
+            ]
+
+            res.setHeader('Set-Cookie', cookies)
             res.status(204).send()
 
         } else {

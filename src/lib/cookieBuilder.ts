@@ -19,77 +19,94 @@ import {getEncryptedCookie} from './cookieEncrypter.js'
 import OAuthAgentConfiguration from './oauthAgentConfiguration.js'
 import {getATCookieName, getRTCookieName, getIDCookieName} from './cookieName.js'
 import {getTempLoginDataCookieForUnset} from './pkce.js'
-import {InvalidIDTokenException} from './exceptions/index.js'
+import InvalidIDTokenException from './exceptions/InvalidIDTokenException.js'
 
 const DAY_MILLISECONDS = 1000 * 60 * 60 * 24
 
 function getCookiesForTokenResponse(tokenResponse: any, config: OAuthAgentConfiguration, unsetTempLoginDataCookie: boolean = false): string[] {
-
+    
+    const atCookieOptions = getCookieSerializeOptions(config, 'AT')
     const cookies = [
-        getEncryptedCookie(config.cookieOptions, tokenResponse.access_token, getATCookieName(config.cookieNamePrefix), config.encKey)
+        getEncryptedCookie(atCookieOptions, tokenResponse.access_token, getATCookieName(config.cookieNamePrefix), config.encKey)
     ]
 
     if (unsetTempLoginDataCookie) {
-        cookies.push(getTempLoginDataCookieForUnset(config.cookieOptions, config.cookieNamePrefix))
+        const loginCookieOptions = getCookieSerializeOptions(config, 'LOGIN')
+        cookies.push(getTempLoginDataCookieForUnset(loginCookieOptions, config.cookieNamePrefix))
     }
 
     if (tokenResponse.refresh_token) {
-        const refreshTokenCookieOptions = {
-            ...config.cookieOptions,
-            path: config.endpointsPrefix + '/refresh'
-        }
-        cookies.push(getEncryptedCookie(refreshTokenCookieOptions, tokenResponse.refresh_token, getRTCookieName(config.cookieNamePrefix), config.encKey))
+        const rtCookieOptions = getCookieSerializeOptions(config, 'RT')
+        cookies.push(getEncryptedCookie(rtCookieOptions, tokenResponse.refresh_token, getRTCookieName(config.cookieNamePrefix), config.encKey))
     }
 
     if (tokenResponse.id_token) {
-        const idTokenCookieOptions = {
-            ...config.cookieOptions,
-            path: config.endpointsPrefix + '/claims'
-        }
 
+        const idCookieOptions = getCookieSerializeOptions(config, 'ID')
         const tokenParts = tokenResponse.id_token.split('.')
         if (tokenParts.length !== 3) {
-            throw new InvalidIDTokenException()
+            throw new InvalidIDTokenException(new Error('ID token is malformed and cannot be written to a cookie'))
         }
 
-        cookies.push(getEncryptedCookie(idTokenCookieOptions, tokenParts[1], getIDCookieName(config.cookieNamePrefix), config.encKey))
+        cookies.push(getEncryptedCookie(idCookieOptions, tokenParts[1], getIDCookieName(config.cookieNamePrefix), config.encKey))
     }
 
+    
     return cookies
 }
 
-function getCookiesForUnset(options: SerializeOptions, cookieNamePrefix: string): string[] {
+function getCookiesForUnset(config: OAuthAgentConfiguration): string[] {
 
-    const cookieOptions = {
-        ...options,
-        expires: new Date(Date.now() - DAY_MILLISECONDS),
+    const expires = new Date(Date.now() - DAY_MILLISECONDS)
+    const atCookieOptions = {
+        ...getCookieSerializeOptions(config, 'AT'),
+        expires,
+    }
+
+    const rtCookieOptions = {
+        ...getCookieSerializeOptions(config, 'RT'),
+        expires,
+    }
+
+    const idCookieOptions = {
+        ...getCookieSerializeOptions(config, 'ID'),
+        expires,
     }
 
     return [
-        serialize(getRTCookieName(cookieNamePrefix), "", cookieOptions),
-        serialize(getATCookieName(cookieNamePrefix), "", cookieOptions),
-        serialize(getIDCookieName(cookieNamePrefix), "", cookieOptions),
+        serialize(getATCookieName(config.cookieNamePrefix), "", atCookieOptions),
+        serialize(getRTCookieName(config.cookieNamePrefix), "", rtCookieOptions),
+        serialize(getIDCookieName(config.cookieNamePrefix), "", idCookieOptions),
     ]
 }
 
-function getCookiesForAccessTokenExpiry(config: OAuthAgentConfiguration, accessToken: string): string[] {
+function getCookieSerializeOptions(config: OAuthAgentConfiguration, type: string): SerializeOptions {
 
-    return [
-        getEncryptedCookie(config.cookieOptions, accessToken, getATCookieName(config.cookieNamePrefix), config.encKey)
-    ]
-}
-
-function getCookiesForRefreshTokenExpiry(config: OAuthAgentConfiguration, accessToken: string, refreshToken: string): string[] {
-
-    const refreshCookieOptions = {
-        ...config.cookieOptions,
-        path: config.endpointsPrefix + '/refresh'
+    return {
+        httpOnly: true,
+        sameSite: true,
+        secure: config.authorizeEndpoint.toLowerCase().startsWith('https'),
+        path: getCookiePath(config, type)
     }
-
-    return [
-        getEncryptedCookie(config.cookieOptions, accessToken, getATCookieName(config.cookieNamePrefix), config.encKey),
-        getEncryptedCookie(refreshCookieOptions, refreshToken, getRTCookieName(config.cookieNamePrefix), config.encKey),
-    ]
 }
 
-export { getCookiesForTokenResponse, getCookiesForUnset, getCookiesForAccessTokenExpiry, getCookiesForRefreshTokenExpiry };
+function getCookiePath(config: OAuthAgentConfiguration, type: string) {
+
+    if (type === 'AT') {
+        
+        // You can control paths to which the access token cookie is sent
+        return config.apiCookieBasePath
+
+    } else if (type === 'RT') {
+        
+        // The refresh token is sent infrequently - only to a particular endpoint
+        return config.endpointsPrefix + '/refresh'
+
+    } else {
+
+        // The ID token cookie and the temporary login cookie use the base path
+        return config.endpointsPrefix + '/'
+    }
+}
+
+export { getCookiesForTokenResponse, getCookiesForUnset, getCookieSerializeOptions }

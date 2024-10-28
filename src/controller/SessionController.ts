@@ -15,12 +15,11 @@
  */
 
 import express from 'express'
-import {getIDCookieName, getIDTokenClaims} from '../lib/index.js'
+import {getIDCookieName, getIDTokenClaimsFromCookie} from '../lib/index.js'
 import {config} from '../config.js'
-import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
 
-class ClaimsController {
+class SessionController {
     public router = express.Router()
 
     constructor() {
@@ -29,20 +28,28 @@ class ClaimsController {
 
     getClaims = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
-        validateExpressRequest(req);
+        validateExpressRequest(req)
 
-        const idTokenCookieName = getIDCookieName(config.cookieNamePrefix)
-        if (req.cookies && req.cookies[idTokenCookieName]) {
+        let isLoggedIn: boolean = false
+        let claims: any = null
 
-            const userData = getIDTokenClaims(config.encKey, req.cookies[idTokenCookieName])
-            res.status(200).json(userData)
+        if (req.cookies) {
 
-        } else {
-            const error = new InvalidCookieException()
-            error.logInfo = 'No ID cookie was supplied in a call to get claims'
-            throw error
+            const idCookie = req.cookies[getIDCookieName(config.cookieNamePrefix)]
+            if (idCookie) {
+                isLoggedIn = true
+                claims = getIDTokenClaimsFromCookie(config.encKey, idCookie)
+            }
         }
+
+        const responseBody: any = {
+            isLoggedIn,
+        }
+        if(claims) {
+            responseBody.claims = claims
+        }
+
     }
 }
 
-export default ClaimsController
+export default SessionController

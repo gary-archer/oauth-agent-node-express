@@ -15,23 +15,28 @@
  */
 
 import express from 'express'
+import { JWTVerifyGetKey } from 'jose'
 import {
     createAuthorizationRequest,
     handleAuthorizationResponse,
-    validateIDtoken,
+    validateIDToken,
     getTokenEndpointResponse,
     getTempLoginDataCookie,
     getTempLoginDataCookieName,
     getCookiesForTokenResponse,
-    getATCookieName,
+    getIDTokenClaimsFromCookie,
+    getIDCookieName,
 } from '../lib/index.js'
 import {config} from '../config.js'
 import validateExpressRequest from '../validateExpressRequest.js'
 
 class LoginController {
+
+    private readonly remoteJwkSet: JWTVerifyGetKey;
     public router = express.Router()
 
-    constructor() {
+    constructor(remoteJwkSet: JWTVerifyGetKey) {
+        this.remoteJwkSet = remoteJwkSet
         this.router.post('/start', this.startLogin)
         this.router.post('/end', this.endLogin)
     }
@@ -64,30 +69,41 @@ class LoginController {
         
         let isLoggedIn = false
         let handled = false
+        let claims: Object | null = null;
 
         if (data.code && data.state) {
 
             const tempLoginData = req.cookies ? req.cookies[getTempLoginDataCookieName(config.cookieNamePrefix)] : undefined
+
             const tokenResponse = await getTokenEndpointResponse(config, data.code, data.state, tempLoginData)
-            if (tokenResponse.id_token) {
-                validateIDtoken(config, tokenResponse.id_token)
-            }
+            claims = await validateIDToken(config, tokenResponse.id_token, this.remoteJwkSet)
+            handled = true
+            isLoggedIn = true
 
             const cookiesToSet = getCookiesForTokenResponse(tokenResponse, config, true)
             res.set('Set-Cookie', cookiesToSet)
-            handled = true
+            
             isLoggedIn = true
 
         } else {
             
-            // During a page reload, return the existing anti forgery token
-            isLoggedIn = !!(req.cookies && req.cookies[getATCookieName(config.cookieNamePrefix)])
+            if (req.cookies) {
+
+                const idCookie = req.cookies[getIDCookieName(config.cookieNamePrefix)]
+                if (idCookie) {
+                    isLoggedIn = true
+                    claims = getIDTokenClaimsFromCookie(config.encKey, idCookie)
+                }
+            }
         }
 
-        const responseBody = {
-            handled,
+        const responseBody: any = {
             isLoggedIn,
-        } as any
+            handled,
+        }
+        if (claims) {
+            responseBody.claims = claims
+        }
         
         res.status(200).json(responseBody)
     }

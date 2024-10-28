@@ -41,10 +41,12 @@ spec:
             value: $AUTHORIZE_ENDPOINT
           - name: TOKEN_ENDPOINT
             value: http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-token
-          - name: USERINFO_ENDPOINT
-            value: http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-userinfo
           - name: LOGOUT_ENDPOINT
             value: $LOGOUT_ENDPOINT
+          - name: JWKS_ENDPOINT
+            value: 'http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-anonymous/jwks'
+          - name: ID_TOKEN_ALGORITHM
+            value: 'ES256'
           - name: CLIENT_ID
             value: spa_client
           - name: CLIENT_SECRET
@@ -57,14 +59,10 @@ spec:
             value: 'openid profile investments'
           - name: COOKIE_NAME_PREFIX
             value: authsamples
-          - name: COOKIE_SECURE
-            value: 'true'
           - name: COOKIE_ENCRYPTION_KEY
             value: $COOKIE_ENCRYPTION_KEY
-          - name: SERVER_CERT_P12_PATH
-            value: ''
-          - name: SERVER_CERT_P12_PASSWORD
-            value: ''
+          - name: API_COOKIE_BASE_PATH
+            value: /
 ---
 kind: Service
 apiVersion: v1

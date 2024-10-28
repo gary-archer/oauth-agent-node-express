@@ -14,19 +14,17 @@
  *  limitations under the License.
  */
 
+import SessionController from './SessionController.js'
 import LoginController from './LoginController.js'
-import LogoutController from './LogoutController.js'
-import UserInfoController from './UserInfoController.js'
-import ClaimsController from './ClaimsController.js'
 import AccessTokenController from './AccessTokenController.js'
 import RefreshTokenController from './RefreshTokenController.js'
+import LogoutController from './LogoutController.js'
 
 
 export {
+    SessionController,
     LoginController,
-    LogoutController,
-    UserInfoController,
-    ClaimsController,
     AccessTokenController,
     RefreshTokenController,
+    LogoutController,
 }

@@ -19,13 +19,13 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import fs from 'fs'
 import https from 'https'
+import { createRemoteJWKSet } from 'jose'
 import {
+    SessionController,
     LoginController,
-    UserInfoController,
-    ClaimsController,
-    LogoutController,
     AccessTokenController,
-    RefreshTokenController
+    RefreshTokenController,
+    LogoutController,
 } from './controller/index.js'
 import {config} from './config.js'
 import loggingMiddleware from './middleware/loggingMiddleware.js'
@@ -43,13 +43,13 @@ app.use('*_', express.json())
 app.use('*_', loggingMiddleware)
 app.set('etag', false)
 
+const remoteJWKSet = createRemoteJWKSet(new URL(config.jwksEndpoint));
 const controllers = {
-    '/login': new LoginController(),
-    '/userInfo': new UserInfoController(),
-    '/claims': new ClaimsController(),
-    '/logout': new LogoutController(),
+    '/session': new SessionController(),
+    '/login': new LoginController(remoteJWKSet),
     '/access' : new AccessTokenController(),
     '/refresh': new RefreshTokenController(),
+    '/logout': new LogoutController(),
 }
 
 for (const [path, controller] of Object.entries(controllers)) {

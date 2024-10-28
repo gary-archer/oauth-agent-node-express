@@ -14,42 +14,26 @@
  *  limitations under the License.
  */
 
-import {decodeJwt} from 'jose';
-import {InvalidIDTokenException} from './exceptions/index.js';
-import OAuthAgentConfiguration from './oauthAgentConfiguration.js';
+import {JWTPayload, jwtVerify, JWTVerifyGetKey, JWTVerifyOptions} from 'jose'
+import OAuthAgentConfiguration from './oauthAgentConfiguration.js'
+import InvalidIDTokenException from './exceptions/InvalidIDTokenException.js';
 
 /*
- * Make some sanity checks to ensure that the issuer and audience are configured correctly
- * The ID token is received over a trusted back channel connection so its signature does not need verifying
- * https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation
+ * Validate the ID token and require one, since the OAuth Agent provides an OpenID Connect solution
  */
-export function validateIDtoken(config: OAuthAgentConfiguration, idToken: string) {
+export default async function validateIDToken(config: OAuthAgentConfiguration, idToken: string, remoteJwkSet: JWTVerifyGetKey): Promise<JWTPayload> {
 
-    // For backwards compatibility, only validate the issuer when one is configured
-    if (process.env.ISSUER) {
+    const options = {
+        algorithms: [config.idTokenAlgorithm],
+        audience: config.clientID,
+        issuer: config.issuer,
+    } as JWTVerifyOptions;
     
-        const payload = decodeJwt(idToken)
-        
-        if (payload.iss !== config.issuer) {
-            throw new InvalidIDTokenException(new Error('Unexpected iss claim'))
-        }
-
-        const audience = getAudienceClaim(payload.aud)
-        if (audience.indexOf(config.clientID) === -1) {
-            throw new InvalidIDTokenException(new Error('Unexpected aud claim'))
-        }
+    try {
+        const result = await jwtVerify(idToken, remoteJwkSet, options);
+        return result.payload;
+    
+    } catch (err: any) {
+        throw new InvalidIDTokenException(err)
     }
-}
-
-function getAudienceClaim(aud: any): string[] {
-
-    if (typeof aud === 'string') {
-        return [aud]
-    }
-
-    if (Array.isArray(aud)) {
-        return aud
-    }
-
-    return []
 }

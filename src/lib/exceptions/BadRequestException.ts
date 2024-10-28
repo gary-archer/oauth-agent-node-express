@@ -14,18 +14,15 @@
  *  limitations under the License.
  */
 
-import {decryptCookie} from './cookieEncrypter.js'
-import {InvalidIDTokenException} from './exceptions/index.js'
+import OAuthAgentException from './OAuthAgentException.js'
 
-function getIDTokenClaimsFromCookie(encKey: string, encryptedCookie: string): Object {
+export default class BadRequestException extends OAuthAgentException {
+    public statusCode = 400
+    public code = 'bad_request'
+    public cause?: Error
 
-    const idTokenPayload = decryptCookie(encKey, encryptedCookie)
-
-    try {
-        return JSON.parse(String(Buffer.from(idTokenPayload, 'base64').toString('binary')))
-    } catch (err: any) {
-        throw new InvalidIDTokenException(new Error('The ID token payload could not be parsed'))
+    constructor(cause?: Error) {
+        super("Access denied due to invalid request details")
+        this.cause = cause
     }
 }
-
-export default getIDTokenClaimsFromCookie

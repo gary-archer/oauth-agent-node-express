@@ -17,12 +17,11 @@
 import type { ClientOptions } from './clientOptions.js'
 import OAuthAgentConfiguration from './oauthAgentConfiguration.js'
 import { createAuthorizationRequest, handleAuthorizationResponse } from './loginHandler.js'
-import { validateIDtoken } from './idTokenValidator.js'
+import validateIDToken from './idTokenValidator.js'
 import { getEncryptedCookie, decryptCookie } from './cookieEncrypter.js'
-import { getCookiesForTokenResponse, getCookiesForUnset, getCookiesForAccessTokenExpiry, getCookiesForRefreshTokenExpiry } from './cookieBuilder.js'
+import { getCookieSerializeOptions, getCookiesForTokenResponse, getCookiesForUnset } from './cookieBuilder.js'
 import { getTokenEndpointResponse, refreshAccessToken } from './getToken.js'
-import getUserInfo from './getUserInfo.js'
-import getIDTokenClaims from './getIDTokenClaims.js'
+import getIDTokenClaimsFromCookie from './getIDTokenClaims.js'
 import getRedirectUri from './redirectUri.js'
 import getLogoutURL from './getLogoutURL.js'
 import { getTempLoginDataCookie, getTempLoginDataCookieForUnset, generateRandomString } from './pkce.js'
@@ -33,20 +32,18 @@ export {
     OAuthAgentConfiguration,
     createAuthorizationRequest,
     handleAuthorizationResponse,
-    validateIDtoken,
+    validateIDToken,
     getEncryptedCookie,
     decryptCookie,
     getTokenEndpointResponse,
-    getUserInfo,
-    getIDTokenClaims,
+    getIDTokenClaimsFromCookie,
     getRedirectUri,
     getLogoutURL,
     refreshAccessToken,
     getCookiesForUnset,
-    getCookiesForAccessTokenExpiry,
-    getCookiesForRefreshTokenExpiry,
     getTempLoginDataCookieForUnset,
     getTempLoginDataCookie,
+    getCookieSerializeOptions,
     getCookiesForTokenResponse,
     getATCookieName,
     getTempLoginDataCookieName,

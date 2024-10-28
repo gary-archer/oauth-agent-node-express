@@ -26,6 +26,7 @@ import {
     getCookiesForTokenResponse,
     getIDTokenClaimsFromCookie,
     getIDCookieName,
+    getCookieSerializeOptions,
 } from '../lib/index.js'
 import {config} from '../config.js'
 import validateExpressRequest from '../validateExpressRequest.js'
@@ -50,8 +51,9 @@ class LoginController {
 
         const authorizationRequestData = createAuthorizationRequest(config, req.body)
 
+        const loginCookieOptions = getCookieSerializeOptions(config, 'LOGIN')
         res.setHeader('Set-Cookie',
-            getTempLoginDataCookie(authorizationRequestData.codeVerifier, authorizationRequestData.state, config.cookieOptions, config.cookieNamePrefix, config.encKey))
+            getTempLoginDataCookie(authorizationRequestData.codeVerifier, authorizationRequestData.state, loginCookieOptions, config.cookieNamePrefix, config.encKey))
         res.status(200).json({
             authorizationRequestUrl: authorizationRequestData.authorizationRequestURL
         })

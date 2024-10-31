@@ -79,8 +79,8 @@ HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/login/end" \
 -H 'accept: application/json' \
 -d '{"pageUrl":"'$WEB_BASE_URL'"}' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then \
-  echo "*** Unauthenticated page load did not fail as expected with the custom header"
+if [ "$HTTP_STATUS" != '400' ]; then \
+  echo "*** Unauthenticated page load did not fail as expected due to a missing custom header"
   exit 1
 fi
 
@@ -173,121 +173,55 @@ fi
 echo '7. Authenticated page reload was successful'
 
 #
-# Test getting user info with an invalid origin
+# Test getting the session without the required custom header
 #
-echo '8. Testing GET User Info from an untrusted origin ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/userinfo" \
--H "origin: http://malicious-site.com" \
+echo '8. Testing GET session without the CORS custom header ...'
+HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/session" \
+-H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
--H 'token-handler-version: 1' \
 -o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Invalid user info request did not fail as expected'
+if [ "$HTTP_STATUS" != '400' ]; then
+  echo '*** Session request did not fail as expected'
   exit 1
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
 CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** User Info returned an unexpected error code"
+if [ "$CODE" != 'bad_request' ]; then
+   echo '*** Session request returned an unexpected error code'
    exit 1
 fi
-echo '8. GET User Info request for an untrusted origin was handled correctly'
+echo '8. GET session request without CORS custom header was handled correctly'
 
 #
-# Test getting user info without a cookie
+# Test getting the session without a cookie
 #
-echo '9. Testing GET User Info without secure cookies ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/userinfo" \
+echo '9. Testing GET session without secure cookies ...'
+HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/session" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
 -H 'token-handler-version: 1' \
--o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Invalid user info request did not fail as expected'
-  exit 1
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE) 
-echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** User Info returned an unexpected error code"
-   exit 1
-fi
-echo '9. GET User Info request without secure cookies was handled correctly'
-
-#
-# Test getting user info successfully
-#
-echo '10. Testing GET User Info with secure cookies ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/userinfo" \
--H "origin: $WEB_BASE_URL" \
--H 'content-type: application/json' \
--H 'accept: application/json' \
--H 'token-handler-version: 1' \
--b $MAIN_COOKIES_FILE \
 -o $RESPONSE_FILE -w '%{http_code}')
 if [ "$HTTP_STATUS" != '200' ]; then
-  echo "*** Getting user info failed with status $HTTP_STATUS"
+  echo "*** Session request failed with status $HTTP_STATUS"
   exit 1
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
-echo '10. GET User Info was successful'
-
-#
-# Test getting ID token claims without a cookie
-#
-echo '11. Testing GET claims without secure cookies ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/claims" \
--H "origin: $WEB_BASE_URL" \
--H 'content-type: application/json' \
--H 'accept: application/json' \
--H 'token-handler-version: 1' \
--o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Invalid claims request did not fail as expected'
-  exit 1
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE) 
-echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Claims request returned an unexpected error code"
+IS_LOGGED_IN=$(jq -r .isLoggedIn <<< "$JSON")
+if [ "$IS_LOGGED_IN" != 'false' ]; then
+   echo "*** Session request returned an unexpected authentication status"
    exit 1
 fi
-echo '11. GET claims request without secure cookies was handled correctly'
+echo '9. GET session request without secure cookies was handled correctly'
 
 #
-# Test getting ID token claims without a cookie
+# Test getting the session with a cookie
 #
-echo '12. Testing GET claims without secure cookies ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/claims" \
--H "origin: $WEB_BASE_URL" \
--H 'content-type: application/json' \
--H 'accept: application/json' \
--H 'token-handler-version: 1' \
--o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo '*** Invalid claims request did not fail as expected'
-  exit 1
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE) 
-echo $JSON | jq
-CODE=$(jq -r .code <<< "$JSON")
-if [ "$CODE" != 'unauthorized_request' ]; then
-   echo "*** Claims request returned an unexpected error code"
-   exit 1
-fi
-echo '12. GET claims request without secure cookies was handled correctly'
-2
-#
-# Test getting ID token claims successfully
-#
-echo '13. Testing GET claims with secure cookies ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/claims" \
+echo '10. Testing GET claims with secure cookies ...'
+HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/session" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
 -H 'accept: application/json' \
@@ -300,12 +234,12 @@ if [ "$HTTP_STATUS" != '200' ]; then
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
-echo "13. GET claims request was successful"
+echo "10. GET claims request was successful"
 
 #
 # Test refreshing a token with an invalid origin
 #
-echo '14. Testing POST to /refresh from an untrusted origin ...'
+echo '11. Testing POST to /refresh from an untrusted origin ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh" \
 -H "origin: http://malicious-site.com" \
 -H 'content-type: application/json' \
@@ -323,12 +257,12 @@ if [ "$CODE" != 'unauthorized_request' ]; then
    echo "*** Refresh returned an unexpected error code"
    exit 1
 fi
-echo '14. POST to /refresh for an untrusted origin was handled correctly'
+echo '11. POST to /refresh for an untrusted origin was handled correctly'
 
 #
 # Test refreshing a token without a cookie
 #
-echo '15. Testing POST to /refresh without secure cookies ...'
+echo '12. Testing POST to /refresh without secure cookies ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -346,12 +280,12 @@ if [ "$CODE" != 'unauthorized_request' ]; then
    echo "*** Refresh returned an unexpected error code"
    exit 1
 fi
-echo '15. POST to /refresh without secure cookies was handled correctly'
+echo '12. POST to /refresh without secure cookies was handled correctly'
 
 #
 # Test refreshing a token, which will rewrite up to 3 cookies
 #
-echo '16. Testing POST to /refresh with correct secure details ...'
+echo '13. Testing POST to /refresh with correct secure details ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -366,12 +300,12 @@ if [ "$HTTP_STATUS" != '204' ]; then
   echo $JSON | jq
   exit 1
 fi
-echo '16. POST to /refresh with correct secure details completed successfully'
+echo '13. POST to /refresh with correct secure details completed successfully'
 
 #
 # Test refreshing a token again, to ensure that the new refresh token is used for the refresh
 #
-echo '17. Testing POST to /refresh with rotated refresh token ...'
+echo '14. Testing POST to /refresh with rotated refresh token ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -385,12 +319,12 @@ if [ "$HTTP_STATUS" != '204' ]; then
   echo $JSON | jq
   exit 1
 fi
-echo '17. POST to /refresh with rotated refresh token completed successfully'
+echo '14. POST to /refresh with rotated refresh token completed successfully'
 
 #
 # Next expire the access token in the secure cookie, for test purposes
 #
-echo '18. Expiring the access token ...'
+echo '15. Expiring the access token ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/access/expire" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -406,31 +340,12 @@ if [ "$HTTP_STATUS" != '204' ]; then
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
-echo "18. Expire access token request was successful"
-
-#
-# Test getting user info with an expired access token
-#
-echo '19. Testing GET User Info with an expired access token returns 401 ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/userinfo" \
--H "origin: $WEB_BASE_URL" \
--H 'content-type: application/json' \
--H 'accept: application/json' \
--H 'token-handler-version: 1' \
--b $MAIN_COOKIES_FILE \
--o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '401' ]; then
-  echo "*** Getting user info did not fail as expected and returned status $HTTP_STATUS"
-  exit 1
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE) 
-echo $JSON | jq
-echo "19. GET User Info returned 401 as expected"
+echo "15. Expire access token request was successful"
 
 #
 # Test refreshing the access token now that it is expired
 #
-echo '20. Testing POST to /refresh to refresh access token ...'
+echo '16. Testing POST to /refresh to refresh access token ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -445,31 +360,12 @@ if [ "$HTTP_STATUS" != '204' ]; then
   echo $JSON | jq
   exit 1
 fi
-echo '20. POST to /refresh completed successfully'
-
-#
-# Test that getting user info now works
-#
-echo '21. Testing GET User Info with a fresh access token returns 200 ...'
-HTTP_STATUS=$(curl -i -s -k -X GET "$OAUTH_AGENT_BASE_URL/userinfo" \
--H "origin: $WEB_BASE_URL" \
--H 'content-type: application/json' \
--H 'accept: application/json' \
--H 'token-handler-version: 1' \
--b $MAIN_COOKIES_FILE \
--o $RESPONSE_FILE -w '%{http_code}')
-if [ "$HTTP_STATUS" != '200' ]; then
-  echo "*** Getting user info failed with status $HTTP_STATUS"
-  exit 1
-fi
-JSON=$(tail -n 1 $RESPONSE_FILE) 
-echo $JSON | jq
-echo '21. GET User Info succeeded with a fresh access token'
+echo '16. POST to /refresh completed successfully'
 
 #
 # Next expire both the refresh token and the access token in secure cookies, for test purposes
 #
-echo '22. Expiring the refresh token ...'
+echo '17. Expiring the refresh token ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh/expire" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -485,12 +381,12 @@ if [ "$HTTP_STATUS" != '204' ]; then
 fi
 JSON=$(tail -n 1 $RESPONSE_FILE) 
 echo $JSON | jq
-echo '22. Expire refresh token request was successful'
+echo '17. Expire refresh token request was successful'
 
 #
 # Next try to refresh the token and we should get an invalid_grant error
 #
-echo '23. Trying to refresh the access token when the session is expired ...'
+echo '18. Trying to refresh the access token when the session is expired ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/refresh" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -505,12 +401,12 @@ if [ "$HTTP_STATUS" != '401' ]; then
   echo $JSON | jq
   exit 1
 fi
-echo '23. POST to /refresh with expired refresh cookie failed as expected'
+echo '18. POST to /refresh with expired refresh cookie failed as expected'
 
 #
 # Run a fresh login so that we get valid cookies and can test logout
 #
-echo '24. Testing POST to start login ...'
+echo '19. Testing POST to start login ...'
 ./test-login.sh
 if [ $? -ne 0 ]; then
   exit 1
@@ -518,12 +414,12 @@ fi
 
 JSON=$(tail -n 1 $RESPONSE_FILE)
 echo $JSON | jq
-echo '24. Login completed successfully'
+echo '19. Login completed successfully'
 
 #
 # Test logging out with an invalid origin
 #
-echo '25. Testing logout POST with invalid web origin ...'
+echo '20. Testing logout POST with invalid web origin ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/logout" \
 -H "origin: http://malicious-site.com" \
 -H 'content-type: application/json' \
@@ -542,12 +438,12 @@ if [ "$CODE" != 'unauthorized_request' ]; then
    echo "*** Logout returned an unexpected error code"
    exit 1
 fi
-echo '25. POST to logout with an invalid web origin was successfully rejected'
+echo '20. POST to logout with an invalid web origin was successfully rejected'
 
 #
 # Test logging out without a cookie
 #
-echo '26. Testing logout POST without secure cookies ...'
+echo '21. Testing logout POST without secure cookies ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/logout" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -566,12 +462,12 @@ if [ "$CODE" != 'unauthorized_request' ]; then
    echo "*** Logout returned an unexpected error code"
    exit 1
 fi
-echo '26. POST to logout without secure cookies was successfully rejected'
+echo '21. POST to logout without secure cookies was successfully rejected'
 
 #
 # Test getting the logout URL and clearing cookies successfully
 #
-echo '27. Testing logout POST with correct secure details ...'
+echo '22. Testing logout POST with correct secure details ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/logout" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -583,14 +479,14 @@ if [ "$HTTP_STATUS" != '200' ]; then
   echo "*** Logout request failed with status $HTTP_STATUS"
   exit 1
 fi
-echo '27. POST to logout with correct secure details completed successfully'
+echo '22. POST to logout with correct secure details completed successfully'
 JSON=$(tail -n 1 $RESPONSE_FILE)
 echo $JSON | jq
 
 #
 # Test following the end session redirect to sign out in the Curity Identity Server
 #
-echo '28. Testing following the end session redirect redirect ...'
+echo '23. Testing following the end session redirect redirect ...'
 END_SESSION_REQUEST_URL=$(jq -r .url <<< "$JSON")
 HTTP_STATUS=$(curl -i -s -k -X GET $END_SESSION_REQUEST_URL \
 -c $LOGIN_COOKIES_FILE \
@@ -599,12 +495,12 @@ if [ $HTTP_STATUS != '302' ]; then
   echo "*** Problem encountered during an OpenID Connect end session redirect, status: $HTTP_STATUS"
   exit 1
 fi
-echo '28. End session redirect completed successfully'
+echo '23. End session redirect completed successfully'
 
 #
 # Test sending malformed JSON which currently results in a 500 error
 #
-echo '29. Testing sending malformed JSON to the OAuth Agent ...'
+echo '24. Testing sending malformed JSON to the OAuth Agent ...'
 HTTP_STATUS=$(curl -i -s -k -X POST "$OAUTH_AGENT_BASE_URL/login/end" \
 -H "origin: $WEB_BASE_URL" \
 -H 'content-type: application/json' \
@@ -623,4 +519,4 @@ if [ "$CODE" != 'server_error' ]; then
    echo '*** Malformed JSON post returned an unexpected error code'
    exit 1
 fi
-echo '29. Malformed JSON was handled in the expected manner'
+echo '24. Malformed JSON was handled in the expected manner'

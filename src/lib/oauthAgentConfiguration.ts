@@ -14,8 +14,6 @@
  *  limitations under the License.
  */
 
-import {SerializeOptions} from 'cookie'
-
 export default class OAuthAgentConfiguration {
 
     // Host settings
@@ -36,13 +34,14 @@ export default class OAuthAgentConfiguration {
     public authorizeEndpoint: string
     public logoutEndpoint: string
     public tokenEndpoint: string
-    public userInfoEndpoint: string
+    public jwksEndpoint: string
+    public idTokenAlgorithm: string
 
     // Secure cookie and CORS configuration
     public cookieNamePrefix: string
     public encKey: string
     public trustedWebOrigin: string
-    public cookieOptions: SerializeOptions
+    public apiCookieBasePath: string
 
     constructor(
         port: string,
@@ -58,11 +57,12 @@ export default class OAuthAgentConfiguration {
         authorizeEndpoint: string,
         logoutEndpoint: string,
         tokenEndpoint: string,
-        userInfoEndpoint: string,
+        jwksEndpoint: string,
+        idTokenAlgorithm: string,
         cookieNamePrefix: string,
         encKey: string,
         trustedWebOrigin: string,
-        cookieOptions?: SerializeOptions) {
+        apiCookieBasePath: string) {
 
         this.port = port
         this.endpointsPrefix = endpointsPrefix
@@ -78,16 +78,13 @@ export default class OAuthAgentConfiguration {
         this.cookieNamePrefix = cookieNamePrefix ? cookieNamePrefix : "oauthagent"
         this.encKey = encKey
         this.trustedWebOrigin = trustedWebOrigin
-        this.cookieOptions = cookieOptions ? cookieOptions : {
-            httpOnly: true,
-            secure: true,
-            sameSite: true
-        } as SerializeOptions
+        this.apiCookieBasePath = apiCookieBasePath
 
         this.issuer = issuer
         this.authorizeEndpoint = authorizeEndpoint
         this.logoutEndpoint = logoutEndpoint
         this.tokenEndpoint = tokenEndpoint
-        this.userInfoEndpoint = userInfoEndpoint
+        this.jwksEndpoint = jwksEndpoint
+        this.idTokenAlgorithm = idTokenAlgorithm
     }
 }

@@ -16,7 +16,7 @@
 
 import express from 'express'
 import {config} from '../config.js'
-import {getATCookieName, getCookiesForUnset, getLogoutURL} from '../lib/index.js'
+import {getIDCookieName, getCookiesForUnset, getLogoutURL} from '../lib/index.js'
 import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
 
@@ -31,10 +31,10 @@ class LogoutController {
 
         validateExpressRequest(req);
 
-        if (req.cookies && req.cookies[getATCookieName(config.cookieNamePrefix)]) {
+        if (req.cookies && req.cookies[getIDCookieName(config.cookieNamePrefix)]) {
 
             const logoutURL = getLogoutURL(config)
-            res.setHeader('Set-Cookie', getCookiesForUnset(config.cookieOptions, config.cookieNamePrefix))
+            res.setHeader('Set-Cookie', getCookiesForUnset(config))
             res.json({ url: logoutURL})
 
         } else {

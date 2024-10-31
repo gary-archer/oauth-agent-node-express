@@ -15,23 +15,28 @@
  */
 
 import express from 'express'
+import { JWTVerifyGetKey } from 'jose'
 import {config} from '../config.js'
 import {
     decryptCookie,
     getATCookieName,
     getRTCookieName,
     getCookiesForTokenResponse,
-    getCookiesForRefreshTokenExpiry,
     refreshAccessToken,
-    validateIDtoken,
+    getEncryptedCookie,
+    getCookieSerializeOptions,
+    validateIDToken,
 } from '../lib/index.js'
 import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
 
 class RefreshTokenController {
+    
+    private readonly remoteJwkSet: JWTVerifyGetKey
     public router = express.Router()
 
-    constructor() {
+    constructor(remoteJwkSet: JWTVerifyGetKey) {
+        this.remoteJwkSet = remoteJwkSet
         this.router.post('/', this.RefreshTokenFromCookie)
         this.router.post('/expire', this.ExpireRefreshToken)
     }
@@ -45,8 +50,9 @@ class RefreshTokenController {
             
             const refreshToken = decryptCookie(config.encKey, req.cookies[rtCookieName])
             const tokenResponse = await refreshAccessToken(refreshToken, config)
+
             if (tokenResponse.id_token) {
-                validateIDtoken(config, tokenResponse.id_token)
+                await validateIDToken(config, tokenResponse.id_token, this.remoteJwkSet)
             }
 
             const cookiesToSet = getCookiesForTokenResponse(tokenResponse, config)
@@ -73,9 +79,15 @@ class RefreshTokenController {
             const refreshToken = decryptCookie(config.encKey, req.cookies[rtCookieName])
             const expiredAccessToken = `${accessToken}x`
             const expiredRefreshToken = `${refreshToken}x`
-            const cookiesToSet = getCookiesForRefreshTokenExpiry(config, expiredAccessToken, expiredRefreshToken)
-            res.setHeader('Set-Cookie', cookiesToSet)
 
+            const atCookieOptions = getCookieSerializeOptions(config, 'AT')
+            const rtCookieOptions = getCookieSerializeOptions(config, 'RT')
+            const cookies = [
+                getEncryptedCookie(atCookieOptions, expiredAccessToken, getATCookieName(config.cookieNamePrefix), config.encKey),
+                getEncryptedCookie(rtCookieOptions, expiredRefreshToken, getRTCookieName(config.cookieNamePrefix), config.encKey)
+            ]
+
+            res.setHeader('Set-Cookie', cookies)
             res.status(204).send()
 
         } else {

@@ -21,6 +21,7 @@ import InvalidIDTokenException from './InvalidIDTokenException.js'
 import MissingTempLoginDataException from './MissingCodeVerifierException.js'
 import InvalidStateException from './InvalidStateException.js'
 import UnauthorizedException from './UnauthorizedException.js'
+import BadRequestException from './BadRequestException.js'
 import AuthorizationClientException from './AuthorizationClientException.js'
 import AuthorizationResponseException from './AuthorizationResponseException.js'
 import AuthorizationServerException from './AuthorizationServerException.js'
@@ -34,6 +35,7 @@ export {
     MissingTempLoginDataException,
     InvalidStateException,
     UnauthorizedException,
+    BadRequestException,
     AuthorizationClientException,
     AuthorizationResponseException,
     AuthorizationServerException,

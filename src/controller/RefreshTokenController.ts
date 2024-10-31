@@ -15,6 +15,7 @@
  */
 
 import express from 'express'
+import { JWTVerifyGetKey } from 'jose'
 import {config} from '../config.js'
 import {
     decryptCookie,
@@ -24,14 +25,18 @@ import {
     refreshAccessToken,
     getEncryptedCookie,
     getCookieSerializeOptions,
+    validateIDToken,
 } from '../lib/index.js'
 import {InvalidCookieException} from '../lib/exceptions/index.js'
 import validateExpressRequest from '../validateExpressRequest.js'
 
 class RefreshTokenController {
+    
+    private readonly remoteJwkSet: JWTVerifyGetKey
     public router = express.Router()
 
-    constructor() {
+    constructor(remoteJwkSet: JWTVerifyGetKey) {
+        this.remoteJwkSet = remoteJwkSet
         this.router.post('/', this.RefreshTokenFromCookie)
         this.router.post('/expire', this.ExpireRefreshToken)
     }
@@ -45,6 +50,10 @@ class RefreshTokenController {
             
             const refreshToken = decryptCookie(config.encKey, req.cookies[rtCookieName])
             const tokenResponse = await refreshAccessToken(refreshToken, config)
+
+            if (tokenResponse.id_token) {
+                await validateIDToken(config, tokenResponse.id_token, this.remoteJwkSet)
+            }
 
             const cookiesToSet = getCookiesForTokenResponse(tokenResponse, config)
             res.setHeader('Set-Cookie', cookiesToSet)

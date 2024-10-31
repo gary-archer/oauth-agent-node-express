@@ -48,7 +48,7 @@ const controllers = {
     '/session': new SessionController(),
     '/login': new LoginController(remoteJWKSet),
     '/access' : new AccessTokenController(),
-    '/refresh': new RefreshTokenController(),
+    '/refresh': new RefreshTokenController(remoteJWKSet),
     '/logout': new LogoutController(),
 }
 

@@ -33,7 +33,7 @@ import validateExpressRequest from '../validateExpressRequest.js'
 
 class LoginController {
 
-    private readonly remoteJwkSet: JWTVerifyGetKey;
+    private readonly remoteJwkSet: JWTVerifyGetKey
     public router = express.Router()
 
     constructor(remoteJwkSet: JWTVerifyGetKey) {

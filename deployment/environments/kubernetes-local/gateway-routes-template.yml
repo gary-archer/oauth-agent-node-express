@@ -41,7 +41,7 @@ services:
   - name: cors
     config:
       origins:
-      - https://www.authsamples-k8s.com
+      - https://www.authsamples-k8s-dev.com
       credentials: true
       max_age: 86400
   - name: oauth-proxy
@@ -73,7 +73,7 @@ services:
   - name: cors
     config:
       origins:
-      - https://www.authsamples-k8s.com
+      - https://www.authsamples-k8s-dev.com
       credentials: true
       max_age: 86400
   - name: oauth-proxy

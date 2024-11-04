@@ -41,7 +41,7 @@ services:
   - name: cors
     config:
       origins:
-      - https://www.authsamples-k8s-dev.com
+      - https://www.authsamples-k8s.com
       credentials: true
       max_age: 86400
   - name: oauth-proxy
@@ -54,6 +54,33 @@ services:
       client_id: api_gateway_client
       client_secret: Password1
       token_cache_seconds: 900
+
+
+  #
+  # The SPA calls https://bff.authsamples-k8s.com/oauthuserinfo to get OAuth user info
+  # The Istio ingress routes here to http://kong-svc.kong.svc:8000/investments
+  # The gateway uses plugins to convert a secure cookie to an opaque access token
+  # It then routes to http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-userinfo
+  #
+- name: oauthuserinfo-web
+  url: http://curity-idsvr-runtime-svc.curity.svc:8443/oauth/v2/oauth-userinfo
+  routes:
+  - name: oauthuserinfo-webroute
+    hosts:
+    - bff.authsamples-k8s.com
+    paths:
+    - /oauthuserinfo
+  plugins:
+  - name: cors
+    config:
+      origins:
+      - https://www.authsamples-k8s.com
+      credentials: true
+      max_age: 86400
+  - name: oauth-proxy
+    config:
+      encryption_key: $COOKIE_ENCRYPTION_KEY
+      cookie_name_prefix: authsamples
 
   #
   # Native apps call https://bff.authsamples-k8s.com/investments to make API calls

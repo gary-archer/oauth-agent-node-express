@@ -12,10 +12,10 @@ services:
     ports:
       - 444:8000
     volumes:
-      - ../environments/docker-local/gateway-routes.yml:/usr/local/kong/declarative/kong.yml
-      - ../../certs/authsamples-dev.ssl.crt:/usr/local/share/certs/authsamples-dev.ssl.crt
-      - ../../certs/authsamples-dev.ssl.key:/usr/local/share/certs/authsamples-dev.ssl.key
-      - ../../certs/authsamples-dev.ca.crt:/usr/local/share/certs/authsamples-dev.ca.crt
+      - ./kong/kong.yml:/usr/local/kong/declarative/kong.yml
+      - ../certs/authsamples-dev.ssl.crt:/usr/local/share/certs/authsamples-dev.ssl.crt
+      - ../certs/authsamples-dev.ssl.key:/usr/local/share/certs/authsamples-dev.ssl.key
+      - ../certs/authsamples-dev.ca.crt:/usr/local/share/certs/authsamples-dev.ca.crt
     environment:
       KONG_DATABASE: 'off'
       KONG_DECLARATIVE_CONFIG: '/usr/local/kong/declarative/kong.yml'
@@ -35,4 +35,4 @@ services:
     image: oauthagent:latest
     hostname: oauthagent-internal
     env_file:
-      - ../environments/docker-local/oauthagent.env
+      - ./oauthagent/oauthagent.env

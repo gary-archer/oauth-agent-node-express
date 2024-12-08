@@ -1,17 +1,8 @@
-#
-# A setup where an SPA calls the Kong gateway on a development computer
-# This configuration uses AWS Cognito as the authorization server
-#
-
 _format_version: '3.0'
 _transform: true
 
 services:
 
-  #
-  # The SPA calls https://bfflocal.authsamples-dev.com:444/oauth-agent to make OAuth calls
-  # The gateway then routes to the OAuth Agent API, which calls the Authorization Server
-  #
 - name: oauth-agent
   url: http://oauthagent-internal:8000/oauth-agent
   routes:
@@ -21,11 +12,6 @@ services:
     paths:
     - /oauth-agent
 
-  #
-  # The SPA calls https://bfflocal.authsamples-dev.com:444/investments to make API calls
-  # The gateway then uses a plugin to decrypt secure cookies
-  # It then calls back out to the local computer to forward the request to the local API on port 446
-  #
 - name: finalapi
   url: https://api.authsamples-dev.com:446/investments
   routes:
@@ -46,11 +32,6 @@ services:
       encryption_key: 33be02f1b76feccf2c30a4847b0ad68d01756d7a9fb7f9a533b12b5d249a9c66
       cookie_name_prefix: authsamples
 
-  #
-  # The SPA calls https://bfflocal.authsamples-dev.com:444/oauthuserinfo to get OAuth user info
-  # The gateway then uses a plugin to decrypt secure cookies
-  # It then calls the authorization server's userinfo endpoint with the access token
-  #
 - name: oauthuserinfo
   url: https://login.authsamples.com/oauth2/userInfo
   routes:

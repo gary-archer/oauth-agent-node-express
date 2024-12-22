@@ -8,14 +8,6 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 cd ..
 
 #
-# Download certificates if required
-#
-./downloadcerts.sh
-if [ $? -ne 0 ]; then
-  exit 1
-fi
-
-#
 # Install OAuth agent dependencies
 #
 if [ ! -d 'node_modules' ]; then

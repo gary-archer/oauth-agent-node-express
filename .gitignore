@@ -1,5 +1,7 @@
 node_modules
 dist
 data
-certs
+certs/*.key
+certs/*.crt
+certs/*.p12
 .DS_Store

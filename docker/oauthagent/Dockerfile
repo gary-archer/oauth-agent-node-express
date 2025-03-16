@@ -1,8 +1,6 @@
 FROM node:20-bookworm
 
-COPY certs/authsamples-dev.ca.crt /usr/local/share/certificates/trusted.ca.crt
 RUN update-ca-certificates
-ENV NODE_EXTRA_CA_CERTS='/usr/local/share/certificates/trusted.ca.crt'
 
 WORKDIR /usr/oauth-agent
 COPY dist                /usr/oauth-agent/dist

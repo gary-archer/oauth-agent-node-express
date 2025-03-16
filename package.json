@@ -20,16 +20,15 @@
         "cors": "^2.8.5",
         "express": "^5.0.1",
         "jose": "^5.9.6",
-        "node-fetch": "^3.3.2",
-        "url-parse": "^1.5.10"
+        "node-fetch": "^3.3.2"
     },
     "devDependencies": {
+        "@types/cookie": "^0.6.0",
         "@types/cookie-parser": "^1.4.6",
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.0",
         "@types/node-fetch": "^2.6.9",
-        "@types/url-parse": "^1.4.11",
-        "tsx": "^4.19.2",
+        "tsx": "^4.19.1",
         "typescript": "^5.7.2"
     }
 }

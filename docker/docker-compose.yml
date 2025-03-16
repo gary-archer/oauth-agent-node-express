@@ -34,5 +34,7 @@ services:
   oauthagent:
     image: oauthagent:latest
     hostname: oauthagent-internal
+    volumes:
+      - ../certs/authsamples-dev.ca.crt:/usr/local/share/certs/authsamples-dev.ca.crt
     env_file:
       - ./oauthagent/oauthagent.env

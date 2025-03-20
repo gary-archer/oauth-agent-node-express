@@ -18,7 +18,7 @@ fi
 # Otherwise require an environment variable
 #
 if [ "$SECRETS_FOLDER" == '' ]; then
-  echo 'You must supply a SECRETS_FOLDER environment variable to the certificate creation script'
+  echo 'You must supply a SECRETS_FOLDER environment variable'
   exit 1
 fi
 

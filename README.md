@@ -1,4 +1,4 @@
 # A Node.js OAuth Agent for SPAs
 
-The OAuth agent is an API that issues cookies for Single Page Applications.\
-This implementation is a fork from the [original Curity version](https://github.com/curityio/oauth-agent-node-express).
+This repository is a fork of the implementation from [chapter 13 of the O'Reilly book](https://github.com/curityio/cloud-native-oauth-security-examples).\
+The only difference is that I added REST operations to rewrite cookies to simulate expiry of access and refresh tokens.

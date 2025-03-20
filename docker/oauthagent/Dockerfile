@@ -1,7 +1,5 @@
 FROM node:20-bookworm
 
-RUN update-ca-certificates
-
 WORKDIR /usr/oauth-agent
 COPY dist                /usr/oauth-agent/dist
 COPY package*.json       /usr/oauth-agent/

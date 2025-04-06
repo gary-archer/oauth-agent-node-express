@@ -27,12 +27,10 @@ export API_COOKIE_BASE_PATH='/'
 #
 # Install dependencies
 #
-if [ ! -d 'node_modules' ]; then
-  npm install
-  if [ $? -ne 0 ]; then
-    echo 'Problem encountered installing dependencies'
-    exit 1
-  fi
+npm install
+if [ $? -ne 0 ]; then
+  echo 'Problem encountered installing dependencies'
+  exit 1
 fi
 
 #
